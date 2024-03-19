@@ -21,10 +21,20 @@ CACHE="$2"
 
 if [[ "$CACHE" == "-nc" ]]
 then
-  docker build --no-cache --file $DOCKER_IMAGE_DIR/Dockerfile --tag $DOCKER_IMAGE_NAME:latest .
+  docker build --no-cache \
+         --file $DOCKER_IMAGE_DIR/Dockerfile \
+         --build-arg USER=$USER \
+         --build-arg USER_ID=$(id -u) \
+         --build-arg GROUP_ID=$(id -g) \
+         --tag $DOCKER_IMAGE_NAME:latest .
 elif [[ "$CACHE" == "" ]]
 then
-  docker build --file $DOCKER_IMAGE_DIR/Dockerfile --tag $DOCKER_IMAGE_NAME:$RELEASE .
+  docker build \
+         --file $DOCKER_IMAGE_DIR/Dockerfile \
+         --build-arg USER=$USER \
+         --build-arg USER_ID=$(id -u) \
+         --build-arg GROUP_ID=$(id -g) \
+         --tag $DOCKER_IMAGE_NAME:latest .
 else
   echo "* Missing flag: [-nc] to build without considering the cache"
 fi

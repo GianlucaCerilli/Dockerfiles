@@ -15,34 +15,39 @@ fi
 DOCKER_IMAGE_VOLUMES="$2"
 WORKING_DIRECTORY_PATH="$3"
 
-WORKING_DIRECTORY_NAME=$(echo $(basename $WORKING_DIRECTORY_PATH))
-
 if [[ "$DOCKER_IMAGE_VOLUMES" == "-v" ]]
 then
-  if [[ "$DOCKER_IMAGE_NAME" == "focal_noetic" ]]
+  if [[ "$WORKING_DIRECTORY_PATH" != "" ]]
   then
-    xhost + && docker run --rm -it \
-           -e "TERM=xterm-256color" \
-           -e DISPLAY=$DISPLAY \
-           -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
-           -v /tmp/.X11-unix:/tmp/.X11-unix \
-           -v $WORKING_DIRECTORY_PATH:/home/user/catkin_ws/src/$WORKING_DIRECTORY_NAME \
-           --workdir /home/user/catkin_ws/src/$WORKING_DIRECTORY_NAME \
-           --name $DOCKER_IMAGE_NAME \
-           $DOCKER_IMAGE_NAME:$RELEASE
-  elif [[ "$DOCKER_IMAGE_NAME" == "jammy_humble" ]]
-  then
-    xhost + && docker run --rm -it \
-           -e "TERM=xterm-256color" \
-           -e DISPLAY=$DISPLAY \
-           -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
-           -v /tmp/.X11-unix:/tmp/.X11-unix \
-           -v $WORKING_DIRECTORY_PATH:/home/user/catkin_ws/src/$WORKING_DIRECTORY_NAME \
-           --workdir /home/user/catkin_ws/src/$WORKING_DIRECTORY_NAME \
-           --name $DOCKER_IMAGE_NAME \
-           $DOCKER_IMAGE_NAME:$RELEASE
+    WORKING_DIRECTORY_NAME=$(echo $(basename $WORKING_DIRECTORY_PATH))
+
+    if [[ "$DOCKER_IMAGE_NAME" == "focal_noetic" ]]
+    then
+      xhost + && docker run --rm -it \
+            -e "TERM=xterm-256color" \
+            -e DISPLAY=$DISPLAY \
+            -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
+            -v /tmp/.X11-unix:/tmp/.X11-unix \
+            -v $WORKING_DIRECTORY_PATH:/home/$USER/catkin_ws/src/$WORKING_DIRECTORY_NAME \
+            -w /home/$USER/catkin_ws/src/$WORKING_DIRECTORY_NAME \
+            --name $DOCKER_IMAGE_NAME \
+            $DOCKER_IMAGE_NAME:$RELEASE
+    elif [[ "$DOCKER_IMAGE_NAME" == "jammy_humble" ]]
+    then
+      xhost + && docker run --rm -it \
+            -e "TERM=xterm-256color" \
+            -e DISPLAY=$DISPLAY \
+            -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
+            -v /tmp/.X11-unix:/tmp/.X11-unix \
+            -v $WORKING_DIRECTORY_PATH:/home/$USER/catkin_ws/src/$WORKING_DIRECTORY_NAME \
+            -w /home/$USER/catkin_ws/src/$WORKING_DIRECTORY_NAME \
+            --name $DOCKER_IMAGE_NAME \
+            $DOCKER_IMAGE_NAME:$RELEASE
+    else
+      echo "Docker images available: [jammy_humble, focal_noetic]"
+    fi
   else
-    echo "Docker images available: [jammy_humble, focal_noetic]"
+    echo "Missing the working directory path (absolute) that you want to mount"
   fi
 elif [[ "$DOCKER_IMAGE_VOLUMES" == "" ]]
 then
@@ -51,6 +56,7 @@ then
            -e DISPLAY=$DISPLAY \
            -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
            -v /tmp/.X11-unix:/tmp/.X11-unix \
+           -w /home/$USER/catkin_ws/src \
            --name $DOCKER_IMAGE_NAME \
            $DOCKER_IMAGE_NAME:$RELEASE
 else
