@@ -1,6 +1,9 @@
 # Install Ubuntu 24.04.2 LTS Noble Numbat
 FROM ubuntu:24.04
 
+# Delete any existing user with UID 1000 (e.g., 'ubuntu')
+RUN userdel -r ubuntu || true
+
 # Get the user name, user id and group id from the host (if passed, when building the docker image)
 # Their default values are "user", "1000:1000"
 ARG USER=user
@@ -54,28 +57,20 @@ RUN echo "\n### Noble Jazzy docker image ###" >> $HOME/.bashrc
 RUN echo "\n# Export variables for gedit" >> $HOME/.bashrc
 RUN echo "export \$(dbus-launch)" >> $HOME/.bashrc
 
-USER root
-
-# Add the scripts to install ROS2 Jazzy Jalisco, Gazebo Harmonic 
-# and configure the ROS2 workspace still as root
-ADD Noble_Jazzy/scripts/install_ros2_jazzy_jalisco.sh /home/$USER/
-ADD Noble_Jazzy/scripts/install_gazebo_harmonic.sh /home/$USER/
-ADD Noble_Jazzy/scripts/configure_workspace.sh /home/$USER/
-
-# Set the permissions to run the scripts as the user
-RUN chown $USER:$USER /home/$USER/*.sh && chmod +x /home/$USER/*.sh
-
 USER $USER
-WORKDIR /home/$USER
+WORKDIR $HOME
 
 # Install ROS2 Jazzy Jalisco
-RUN "./install_ros2_jazzy_jalisco.sh"
+ADD Noble_Jazzy/scripts/install_ros2_jazzy_jalisco.sh $HOME/
+RUN "$HOME/install_ros2_jazzy_jalisco.sh"
 
 # Install Gazebo Harmonic
-RUN "./install_gazebo_harmonic.sh"
+ADD Noble_Jazzy/scripts/install_gazebo_harmonic.sh $HOME/
+RUN "$HOME/install_gazebo_harmonic.sh"
 
 # Configure the ROS 2 workspace
-RUN "./configure_workspace.sh"
+ADD Noble_Jazzy/scripts/configure_workspace.sh $HOME/
+RUN "$HOME/configure_workspace.sh"
 
 # Remove the installation scripts from the image
 RUN rm $HOME/install_ros2_jazzy_jalisco.sh
