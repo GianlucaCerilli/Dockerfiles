@@ -2,65 +2,61 @@
 
 # Docker image name passed from command line
 DOCKER_IMAGE_NAME="$1"
-RELEASE="latest"
+RELEASE="$2"
 
 echo -e "Running the Docker image $DOCKER_IMAGE_NAME\n"
 
-if [ "$DOCKER_IMAGE_NAME" != "jammy_humble" ] && [ "$DOCKER_IMAGE_NAME" != "focal_noetic" ]
+# Check if the Docker image name is valid
+if [ "$DOCKER_IMAGE_NAME" != "noble_jazzy" ]
 then
-  echo "Docker images available: [jammy_humble, focal_noetic]"
+  echo "Docker images available: [noble_jazzy]"
   exit
 fi
 
-DOCKER_IMAGE_VOLUMES="$2"
-WORKING_DIRECTORY_PATH="$3"
-
-if [[ "$DOCKER_IMAGE_VOLUMES" == "-v" ]]
+# Check if the optional parameter for the Docker image tag is provided. Otherwise, use "latest" by default
+if [ -z "$RELEASE" ]
 then
-  if [[ "$WORKING_DIRECTORY_PATH" != "" ]]
+  RELEASE="latest"
+fi
+
+DOCKER_IMAGE_VOLUMES="$3"
+
+# Absolute path to the folder (included) that you want to mount in the container
+WORKING_DIRECTORY_PATH="$4"
+
+# Check if the optional parameter -v is provided. Otherwise, do not mount volumes by default
+if [ "$DOCKER_IMAGE_VOLUMES" == "-v" ]
+then
+  if [ -z "$WORKING_DIRECTORY_PATH" ]
   then
-    WORKING_DIRECTORY_NAME=$(echo $(basename $WORKING_DIRECTORY_PATH))
-
-    if [[ "$DOCKER_IMAGE_NAME" == "focal_noetic" ]]
-    then
-      xhost + && docker run --rm -it \
-            -e "TERM=xterm-256color" \
-            -e DISPLAY=$DISPLAY \
-            -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
-            -v /tmp/.X11-unix:/tmp/.X11-unix \
-            -v $WORKING_DIRECTORY_PATH:/home/$USER/catkin_ws/src/$WORKING_DIRECTORY_NAME \
-            -w /home/$USER/catkin_ws/src/$WORKING_DIRECTORY_NAME \
-            --name $DOCKER_IMAGE_NAME \
-            $DOCKER_IMAGE_NAME:$RELEASE
-    elif [[ "$DOCKER_IMAGE_NAME" == "jammy_humble" ]]
-    then
-      xhost + && docker run --rm -it \
-            -e "TERM=xterm-256color" \
-            -e DISPLAY=$DISPLAY \
-            -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
-            -v /tmp/.X11-unix:/tmp/.X11-unix \
-            -v $WORKING_DIRECTORY_PATH:/home/$USER/catkin_ws/src/$WORKING_DIRECTORY_NAME \
-            -w /home/$USER/catkin_ws/src/$WORKING_DIRECTORY_NAME \
-            --name $DOCKER_IMAGE_NAME \
-            $DOCKER_IMAGE_NAME:$RELEASE
-    else
-      echo "Docker images available: [jammy_humble, focal_noetic]"
-    fi
+    echo "Missing the absolute path to the folder (included) that you want to mount in the container"
+    exit
   else
-    echo "Missing the working directory path (absolute) that you want to mount"
+    # Get the name of the folder that you want to mount in the container
+    WORKING_DIRECTORY_NAME=$(echo $(basename $WORKING_DIRECTORY_PATH))
+    VOLUMES_COMMAND="$DOCKER_IMAGE_VOLUMES $WORKING_DIRECTORY_PATH:/home/$USER/ros2_ws/src/$WORKING_DIRECTORY_NAME"
   fi
-elif [[ "$DOCKER_IMAGE_VOLUMES" == "" ]]
+elif [ "$DOCKER_IMAGE_VOLUMES" != "-v" ] && [ "$DOCKER_IMAGE_VOLUMES" != "" ]
 then
-    xhost + && docker run --rm -it \
-           -e "TERM=xterm-256color" \
-           -e DISPLAY=$DISPLAY \
-           -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
-           -v /tmp/.X11-unix:/tmp/.X11-unix \
-           -w /home/$USER/catkin_ws/src \
-           --name $DOCKER_IMAGE_NAME \
-           $DOCKER_IMAGE_NAME:$RELEASE
+  # Invalid optional parameter
+  echo "* Optional parameters: [-v] to mount volumes in the container"
+  exit
+fi
+
+# Run the Docker image with the name provided
+if [ "$DOCKER_IMAGE_NAME" == "noble_jazzy" ]
+then
+  xhost + && docker run --rm -it \
+        -e "TERM=xterm-256color" \
+        -e DISPLAY=$DISPLAY \
+        -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
+        -v /tmp/.X11-unix:/tmp/.X11-unix \
+        $VOLUMES_COMMAND \
+        -w /home/$USER/ros2_ws/src/$WORKING_DIRECTORY_NAME \
+        --name $DOCKER_IMAGE_NAME \
+        $DOCKER_IMAGE_NAME:$RELEASE
 else
-  echo "* Available flags: [-v] to mount volumes in the Docker image"
+  echo "Docker images available: [noble_jazzy]"
 fi
 
 exit

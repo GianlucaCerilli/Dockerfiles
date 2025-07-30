@@ -2,41 +2,43 @@
 
 # Docker image name passed from command line
 DOCKER_IMAGE_NAME="$1"
-RELEASE="latest"
+RELEASE="$2"
+
+USER_ID=$(id -u)
+GROUP_ID=$(id -g)
 
 echo -e "Building the Docker image $DOCKER_IMAGE_NAME\n"
 
-if [[ "$DOCKER_IMAGE_NAME" == "jammy_humble" ]]
+# Check if the Docker image name is valid and find the corresponding directory
+if [ "$DOCKER_IMAGE_NAME" == "noble_jazzy" ]
 then
-  DOCKER_IMAGE_DIR="Jammy_Humble"
-elif [[ "$DOCKER_IMAGE_NAME" == "focal_noetic" ]]
-then
-  DOCKER_IMAGE_DIR="Focal_Noetic"
+  DOCKER_IMAGE_DIR="Noble_Jazzy"
 else
-  echo "* Missing docker image name: [jammy_humble, focal_noetic]"
+  echo "* Missing docker image name: [noble_jazzy]"
   exit
 fi
 
-CACHE="$2"
-
-if [[ "$CACHE" == "-nc" ]]
+# Check if the optional parameter for the Docker image tag is provided. Otherwise, use "latest" by default
+if [ -z "$RELEASE" ]
 then
-  docker build --no-cache \
-         --file $DOCKER_IMAGE_DIR/Dockerfile \
-         --build-arg USER=$USER \
-         --build-arg USER_ID=$(id -u) \
-         --build-arg GROUP_ID=$(id -g) \
-         --tag $DOCKER_IMAGE_NAME:latest .
-elif [[ "$CACHE" == "" ]]
-then
-  docker build \
-         --file $DOCKER_IMAGE_DIR/Dockerfile \
-         --build-arg USER=$USER \
-         --build-arg USER_ID=$(id -u) \
-         --build-arg GROUP_ID=$(id -g) \
-         --tag $DOCKER_IMAGE_NAME:latest .
-else
-  echo "* Missing flag: [-nc] to build without considering the cache"
+  RELEASE="latest"
 fi
+
+NO_CACHE="$3"
+
+# Check if the optional parameter --no-cache is provided. Otherwise, use the cache by default
+if [ "$NO_CACHE" != "" ] && [ "$NO_CACHE" != "--no-cache" ]
+then
+  echo "* Optional parameters: [--no-cache] to build without considering the cache"
+  exit
+fi
+
+# Build the Docker image
+docker build $NO_CACHE \
+       --file $DOCKER_IMAGE_DIR/Dockerfile \
+       --build-arg USER="$USER" \
+       --build-arg USER_ID="$USER_ID" \
+       --build-arg GROUP_ID="$GROUP_ID" \
+       --tag $DOCKER_IMAGE_NAME:$RELEASE .
 
 exit
