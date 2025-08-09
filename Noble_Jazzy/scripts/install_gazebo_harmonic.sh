@@ -12,5 +12,8 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-
 sudo apt-get update
 sudo apt-get install -y gz-harmonic
 
+# Install RQt (RQt already installed with ROS2. Install now additional RQt packages)
+sudo apt-get install -y '~nros-jazzy-rqt*'
+
 # References
 # https://gazebosim.org/docs/harmonic/install_ubuntu/

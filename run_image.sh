@@ -51,6 +51,7 @@ then
         -e DISPLAY=$DISPLAY \
         -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
         -v /tmp/.X11-unix:/tmp/.X11-unix \
+        --device /dev/dri:/dev/dri \
         $VOLUMES_COMMAND \
         -w /home/$USER/ros2_ws/src/$WORKING_DIRECTORY_NAME \
         --name $DOCKER_IMAGE_NAME \
